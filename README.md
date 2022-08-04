@@ -1,10 +1,10 @@
-# Schema Registry avro CLI demo
+# 101 Schema Registry AVRO CLI demo/tutorial
 
 In this demo I will show some basic charateristics of applying an avro schema to your Kafka topic using 
 the Confluent Schema Registry and the Kafka CLI tools. 
 
 ### Outline
-In this demo/turorial we will
+In this demo/tutorial we will
 * start a single node local development cluster and configure the broker with a schema registry URL.
 * create a topic and -from the command line- produce some strings and consume those strings.
 * apply a value-schema using the Confluent Control Center
@@ -24,7 +24,9 @@ And FWIW. I'm running Ubuntu 20.04 on WSL2/Win11
 
 Oh. And. I will use 3 terminal windows. So if your terminal is capable of it, open three windows and name the first one `Control`, the second `Producer` and the third `Consumer`. 
 
-## Steps
+### Confluent Platform.
+
+This demo uses Confluent Platform, so you'll have to have access to one of those. If you don't access to an existing one, you can use the `confluent local` to run a local development cluster. Make sure you configure you broker with `confluent.schema.registry.url`.
 
 Use your `Control` terminal to start and configure a Confluent Platform.  
 
@@ -50,7 +52,11 @@ echo "confluent.schema.registry.url=http://localhost:8081" >> kafka-avro-cli-dem
 kafka-server-start -daemon kafka-avro-cli-demo.properties
 ```
 
-Note that both `kafka-server-stop` and `kafka-server-start` take some time to complete. So I added `sleep 20`. You may need to give it a few moments at for the broker to be up and running. 
+Note that both `kafka-server-stop` and `kafka-server-start` take some time to complete. So I added `sleep 20` in the script above. You may also need to give it a few moments at for the broker to be up and running, before continuing with the steps below. 
+
+
+
+## Demo Steps
 
 ### Create topic
 
@@ -106,6 +112,8 @@ We'll apply a schema to the `avro-demo` topic using the Control Center.
 You can apply schema to the key and/or to the value of a Kafka message. 
 I this demo we're not concerned with keys, so we apply one only to the value. 
 
+![Adding a schema](imgs/sc2-add-schema.png)
+
 In Control Center navigate to the Schema tab on the `avro-demo` topic. Ensure the `Value` button 
 is active and click the Set a Schema button. Paste the example schema from below into the schema editor
 
@@ -126,7 +134,8 @@ It wants data to look like this in json form: `{"myIntegerField": 1, "myStringFi
     },
     {
       "name": "myStringField",
-      "type": "string"
+      "type": "string",
+      "default": "DefaultString"
     }
   ]
 }
@@ -171,6 +180,8 @@ avro aware tools. We'll use the Kafka command line tools `kafka-avro-console-con
 So in your produce and consume terminals above stop the running producer and consumer. We're about to start an 
 Avro-enabled one of each.
 
+![Avro Serializer and Deserializer](imgs/sc3-avro-serializer-deserializer.png)
+
 ### Avro enabled consumer + producer
 
 I'm starting a producer and a consumer that are completely analog to the ones we started above, except that they 
@@ -186,7 +197,7 @@ kafka-avro-console-consumer \
   --property schema.registry.url=http://localhost:8081 \
   --property value.schema.id=1 
 ```
-In you producer terminal start an AVRO producer
+In your producer terminal start an AVRO producer
 ```
 kafka-avro-console-producer \
   --bootstrap-server localhost:9092 \
@@ -242,8 +253,10 @@ OK. So with an avro-enabled producer we can prevent non-compliant data going int
 But. We have also seen that if we use a _non-avro producer_, we can still put non-compliant data into our topic. Can we prevent that?
 
 
-## Broker-side schema validation
+## Scenario 4 - Broker-side schema validation
 You can use the topic configuration for _Broker-side schema validation_ to help ensure producers don't produce non-compliant data to your topic. 
+
+![Avro Serializer and Deserializer](imgs/sc4-with-schema-validation.png)
 
 Using the topic configs. Set `confluent.value.schema.validation` to `true`. If you prefer you can find and configure the _value schema validation_ config in the Control Center. 
 
@@ -255,7 +268,7 @@ Using the topic configs. Set `confluent.value.schema.validation` to `true`. If y
   --entity-name avro-demo \
   --add-config confluent.value.schema.validation=true
 ```
-Now we'll try to produce non-compliant data to the topic that now has both a value-schema set, and has `value.schema.validation` enabled. Use the same command as above in your producer terminal:
+Now, using the non-avro (i.e. Strings) producer we'll try to produce non-compliant data to the topic that now has both a value-schema set, and has `value.schema.validation` enabled. Use the same command as above in your producer terminal:
 
 ```
 kafka-console-producer --bootstrap-server localhost:9092 --topic avro-demo
