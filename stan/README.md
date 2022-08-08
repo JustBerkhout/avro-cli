@@ -1,11 +1,25 @@
+# What's this?
+This is a small that illustrates an example from Confluent Schema Registry enablements. It shows a number of different errors/failures in the context of evolving schema's in unsafe ways. The example uses the schema registry configured (default) to enforce BACKWARD compatibility, and topic configure with the schema subject naming strategy for the value of `TopicNameStrategy`.
 
+What is coming?
+* start node
+* create topic
+* create version 1 value schema
 
+* fail evolving using Control Center
+
+* fail using avro-cli producer tool
+* fail using avro cli producer tool differently
+
+## Steps
+
+### Prerequisite
 start local dev node
 
-create topic `regbug`
+create topic `stan-demo`
 
 ```
-kafka-topics --bootstrap-server localhost:9092 --topic regbug --create
+kafka-topics --bootstrap-server localhost:9092 --topic stan-demo --create
 ```
 
 add value schema
@@ -49,7 +63,7 @@ I'll use the `value.schema` `property` in this example
 ```
 kafka-avro-console-producer  \
  --bootstrap-server localhost:9092  \
- --topic regbug \
+ --topic stan-demo \
  --property schema.registry.url=http://localhost:8081 \
  --property value.schema='{"type":"record","name":"stan","namespace":"io.confluent.demo","fields":[{"name":"Name","type":"string"},{"name":"DateOfBirth","type":"string"}]}'
 
@@ -71,7 +85,7 @@ start console producer with timestamp schema.
 ```
 kafka-avro-console-producer  \
  --bootstrap-server localhost:9092  \
- --topic regbug \
+ --topic stan-demo \
  --property schema.registry.url=http://localhost:8081 \
  --property value.schema='{"type":"record","name":"stan","namespace":"io.confluent.demo","fields":[{"name":"Name","type":"string"},{"name":"DateOfBirth","type":{"type":"long","logicalType":"timestamp-millis"}}]}'
 
@@ -95,7 +109,7 @@ autoregistering ischema is a producer config, so let's start a producer with aut
 ```
 kafka-avro-console-producer  \
  --bootstrap-server localhost:9092  \
- --topic regbug \
+ --topic stan-demo \
  --property schema.registry.url=http://localhost:8081 \
  --property value.schema='{"type":"record","name":"stan","namespace":"io.confluent.demo","fields":[{"name":"Name","type":"string"},{"name":"DateOfBirth","type":{"type":"long","logicalType":"timestamp-millis"}}]}' \
  --property auto.register.schemas=false
@@ -107,3 +121,5 @@ This also fails, because the schema isn't found.
 
 
 
+### Tear down
+...
